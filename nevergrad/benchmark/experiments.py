@@ -993,6 +993,26 @@ def mixsimulator(seed: tp.Optional[int] = None) -> tp.Iterator[Experiment]:
                         xp = Experiment(fu, algo, budget, num_workers=num_workers, seed=next(seedg))
                         if not xp.is_incoherent:
                             yield xp
+                            
+@registry.register
+def mixsimulator_light(seed: tp.Optional[int] = None) -> tp.Iterator[Experiment]:
+    """MixSimulator of power plants
+    Budget 20, 40, ..., 1600.
+    Sequential or 30 workers."""
+    funcs = [OptimizeMix(time=2)]
+    seedg = create_seed_generator(seed)
+    optims: tp.List[str] = get_optimizers("basics", seed=next(seedg))  # type: ignore
+    if default_optims is not None:
+        optims = default_optims
+    seq = np.arange(0, 1601, 20)
+    for budget in seq:
+        for num_workers in [1, 30]:
+            if num_workers < budget:
+                for algo in optims:
+                    for fu in funcs:
+                        xp = Experiment(fu, algo, budget, num_workers=num_workers, seed=next(seedg))
+                        if not xp.is_incoherent:
+                            yield xp
 
 
 @registry.register
